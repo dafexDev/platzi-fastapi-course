@@ -1,7 +1,15 @@
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 from typing import Literal, Optional
 from datetime import datetime
 import pytz
+
+
+class Customer(BaseModel):
+    name: str
+    description: Optional[str]
+    email: str
+    age: int
 
 
 app = FastAPI()
@@ -56,3 +64,8 @@ async def time_in_timezone(
         raise HTTPException(status_code=400, detail="Invalid timezone")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/customers")
+async def create_customers(customer_data: Customer):
+    return customer_data
