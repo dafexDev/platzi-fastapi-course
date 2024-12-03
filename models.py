@@ -2,12 +2,19 @@ from typing import Optional, List
 from pydantic import BaseModel, EmailStr
 
 
-class Customer(BaseModel):
-    id: int
+class CustomerBase(BaseModel):
     name: str
     description: Optional[str]
     email: EmailStr
     age: int
+    
+
+class CustomerCreate(CustomerBase):
+    pass
+
+
+class Customer(CustomerBase):
+    id: Optional[int] = None
 
 
 class Transaction(BaseModel):
