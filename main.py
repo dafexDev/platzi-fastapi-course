@@ -64,7 +64,7 @@ db_customers: List[Customer] = []
 
 
 @app.post("/customers", response_model=Customer)
-async def create_customers(customer_data: CustomerCreate):
+async def create_customer(customer_data: CustomerCreate):
     customer = Customer.model_validate(customer_data.model_dump())
     db_customers.append(customer)
     customer.id = len(db_customers)
