@@ -71,6 +71,11 @@ async def create_customer(customer_data: CustomerCreate):
     return customer
 
 
+@app.get("/customers", response_model=List[Customer])
+async def list_customers():
+    return db_customers
+
+
 @app.post("/transactions")
 async def create_transaction(transaction_data: Transaction):
     return transaction_data
