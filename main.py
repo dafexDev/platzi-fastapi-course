@@ -1,9 +1,9 @@
 from fastapi import FastAPI, HTTPException
-from typing import Literal, Optional
+from typing import Literal, Optional, List
 from datetime import datetime
 import pytz
 
-from models import Customer, Transaction, Invoice
+from models import Customer, CustomerCreate, Transaction, Invoice
 
 
 app = FastAPI()
@@ -60,9 +60,15 @@ async def time_in_timezone(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/customers")
-async def create_customers(customer_data: Customer):
-    return customer_data
+db_customers: List[Customer] = []
+
+
+@app.post("/customers", response_model=Customer)
+async def create_customers(customer_data: CustomerCreate):
+    customer = Customer.model_validate(customer_data.model_dump())
+    db_customers.append(customer)
+    customer.id = len(db_customers)
+    return customer
 
 
 @app.post("/transactions")
