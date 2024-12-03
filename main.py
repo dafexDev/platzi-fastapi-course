@@ -4,9 +4,11 @@ from datetime import datetime
 import pytz
 
 from models import Customer, CustomerCreate, Transaction, Invoice
+from db import SessionDep, create_all_tables
+from sqlmodel import select
 
 
-app = FastAPI()
+app = FastAPI(lifespan=create_all_tables)
 
 
 @app.get("/")
@@ -60,20 +62,18 @@ async def time_in_timezone(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-db_customers: List[Customer] = []
-
-
 @app.post("/customers", response_model=Customer)
-async def create_customer(customer_data: CustomerCreate):
+async def create_customer(customer_data: CustomerCreate, session: SessionDep):
     customer = Customer.model_validate(customer_data.model_dump())
-    db_customers.append(customer)
-    customer.id = len(db_customers)
+    session.add(customer)
+    session.commit()
+    session.refresh(customer)
     return customer
 
 
 @app.get("/customers", response_model=List[Customer])
-async def list_customers():
-    return db_customers
+async def list_customers(session: SessionDep):
+    return session.exec(select(Customer)).all()
 
 
 @app.post("/transactions")
