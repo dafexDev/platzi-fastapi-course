@@ -1,15 +1,9 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 from typing import Literal, Optional
 from datetime import datetime
 import pytz
 
-
-class Customer(BaseModel):
-    name: str
-    description: Optional[str]
-    email: str
-    age: int
+from models import Customer, Transaction, Invoice
 
 
 app = FastAPI()
@@ -69,3 +63,13 @@ async def time_in_timezone(
 @app.post("/customers")
 async def create_customers(customer_data: Customer):
     return customer_data
+
+
+@app.post("/transactions")
+async def create_transaction(transaction_data: Transaction):
+    return transaction_data
+
+
+@app.post("/invoices")
+async def create_invoice(invoice_data: Invoice):
+    return invoice_data
