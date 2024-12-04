@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
 from typing import Literal, Optional, List
 from datetime import datetime
 import pytz
@@ -55,14 +55,18 @@ async def time_in_timezone(
         current_time_in_timezone = get_current_time_in_timezone(iso_code, time_format)
         return {"time": current_time_in_timezone}
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except pytz.exceptions.UnknownTimeZoneError:
-        raise HTTPException(status_code=400, detail="Invalid timezone")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid timezone"
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
 
 
-@app.post("/customers", response_model=Customer)
+@app.post("/customers", response_model=Customer, status_code=status.HTTP_201_CREATED)
 async def create_customer(customer_data: CustomerCreate, session: SessionDep):
     customer = Customer.model_validate(customer_data.model_dump())
     session.add(customer)
@@ -80,17 +84,25 @@ async def list_customers(session: SessionDep):
 async def read_customer(customer_id: int, session: SessionDep):
     customer = session.get(Customer, customer_id)
     if customer is None:
-        raise HTTPException(status_code=404, detail="Customer not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found"
+        )
     return customer
 
 
-@app.patch("/customers/{customer_id}", response_model=Customer, status_code=201)
+@app.patch(
+    "/customers/{customer_id}",
+    response_model=Customer,
+    status_code=status.HTTP_201_CREATED,
+)
 async def update_customer(
     customer_id: int, customer_data: CustomerUpdate, session: SessionDep
 ):
     customer = session.get(Customer, customer_id)
     if customer is None:
-        raise HTTPException(status_code=404, detail="Customer not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found"
+        )
     customer_data_dict = customer_data.model_dump(exclude_unset=True)
     customer.sqlmodel_update(customer_data_dict)
     session.add(customer)
@@ -103,7 +115,9 @@ async def update_customer(
 async def delete_customer(customer_id: int, session: SessionDep):
     customer = session.get(Customer, customer_id)
     if customer is None:
-        raise HTTPException(status_code=404, detail="Customer not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found"
+        )
     session.delete(customer)
     session.commit()
     return {"detail": "ok"}
