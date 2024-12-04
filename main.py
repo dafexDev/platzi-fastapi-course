@@ -3,7 +3,7 @@ from typing import Literal, Optional, List
 from datetime import datetime
 import pytz
 
-from models import Customer, CustomerCreate, Transaction, Invoice
+from models import Customer, CustomerCreate, CustomerUpdate, Transaction, Invoice
 from db import SessionDep, create_all_tables
 from sqlmodel import select
 
@@ -74,6 +74,39 @@ async def create_customer(customer_data: CustomerCreate, session: SessionDep):
 @app.get("/customers", response_model=List[Customer])
 async def list_customers(session: SessionDep):
     return session.exec(select(Customer)).all()
+
+
+@app.get("/customers/{customer_id}", response_model=Customer)
+async def read_customer(customer_id: int, session: SessionDep):
+    customer = session.get(Customer, customer_id)
+    if customer is None:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return customer
+
+
+@app.patch("/customers/{customer_id}", response_model=Customer, status_code=201)
+async def update_customer(
+    customer_id: int, customer_data: CustomerUpdate, session: SessionDep
+):
+    customer = session.get(Customer, customer_id)
+    if customer is None:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    customer_data_dict = customer_data.model_dump(exclude_unset=True)
+    customer.sqlmodel_update(customer_data_dict)
+    session.add(customer)
+    session.commit()
+    session.refresh(customer)
+    return customer
+
+
+@app.delete("/customers/{customer_id}")
+async def delete_customer(customer_id: int, session: SessionDep):
+    customer = session.get(Customer, customer_id)
+    if customer is None:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    session.delete(customer)
+    session.commit()
+    return {"detail": "ok"}
 
 
 @app.post("/transactions")
