@@ -1,7 +1,7 @@
 from typing import Optional, List
 
 from pydantic import BaseModel, EmailStr
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 
 
 class CustomerBase(SQLModel):
@@ -21,12 +21,26 @@ class CustomerUpdate(CustomerBase):
 
 class Customer(CustomerBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    transactions: List["Transaction"] = Relationship(back_populates="customer")
 
 
-class Transaction(BaseModel):
-    id: int
-    amount: int
-    description: str
+class TransactionBase(SQLModel):
+    amount: int = Field(default=None)
+    description: str = Field(default=None)
+
+
+class TransactionCreate(TransactionBase):
+    customer_id: int = Field(foreign_key="customer.id")
+    
+
+class TransactionUpdate(TransactionBase):
+    pass
+
+
+class Transaction(TransactionBase, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    customer_id: int = Field(foreign_key="customer.id")
+    customer: Customer = Relationship(back_populates="transactions")
 
 
 class Invoice(BaseModel):
