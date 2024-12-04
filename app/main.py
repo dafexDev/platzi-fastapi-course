@@ -6,12 +6,13 @@ import pytz
 from models import Transaction, Invoice
 from db import create_all_tables
 
-from .routers import customers, transactions
+from .routers import customers, transactions, invoices
 
 
 app = FastAPI(lifespan=create_all_tables)
 app.include_router(customers.router)
 app.include_router(transactions.router)
+app.include_router(invoices.router)
 
 
 @app.get("/")
@@ -67,8 +68,3 @@ async def time_in_timezone(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
-
-
-@app.post("/invoices")
-async def create_invoice(invoice_data: Invoice):
-    return invoice_data
