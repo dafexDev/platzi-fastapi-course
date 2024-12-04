@@ -3,7 +3,6 @@ from typing import Literal, Optional
 from datetime import datetime
 import pytz
 
-from models import Transaction, Invoice
 from db import create_all_tables
 
 from .routers import customers, transactions, invoices
