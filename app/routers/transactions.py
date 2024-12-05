@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter, HTTPException, status
 
 from sqlmodel import select
@@ -10,7 +8,7 @@ from db import SessionDep
 router = APIRouter(tags=["transactions"])
 
 
-@router.get("/transactions", response_model=List[Transaction])
+@router.get("/transactions", response_model=list[Transaction])
 async def list_transactions(session: SessionDep):
     transactions = session.exec(select(Transaction)).all()
     return transactions

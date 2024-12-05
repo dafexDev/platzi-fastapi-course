@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 from sqlmodel import SQLModel, Field, Relationship
@@ -15,7 +15,7 @@ class Plan(SQLModel, table=True):
     name: str = Field(default=None)
     price: int = Field(default=None)
     description: str = Field(default=None)
-    customers: List["Customer"] = Relationship(
+    customers: list["Customer"] = Relationship(
         back_populates="plans", link_model=CustomerPlan
     )
 
@@ -37,8 +37,8 @@ class CustomerUpdate(CustomerBase):
 
 class Customer(CustomerBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    transactions: List["Transaction"] = Relationship(back_populates="customer")
-    plans: List[Plan] = Relationship(
+    transactions: list["Transaction"] = Relationship(back_populates="customer")
+    plans: list[Plan] = Relationship(
         back_populates="customers", link_model=CustomerPlan
     )
 
@@ -65,7 +65,7 @@ class Transaction(TransactionBase, table=True):
 class Invoice(BaseModel):
     id: int
     customer: Customer
-    transactions: List[Transaction]
+    transactions: list[Transaction]
     total: int
 
     @property
