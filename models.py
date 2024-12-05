@@ -10,11 +10,18 @@ class CustomerPlan(SQLModel, table=True):
     customer_id: int = Field(foreign_key="customer.id")
 
 
-class Plan(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+class PlanBase(SQLModel):
     name: str = Field(default=None)
     price: int = Field(default=None)
     description: str = Field(default=None)
+
+
+class PlanCreate(PlanBase):
+    pass
+
+
+class Plan(PlanBase, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
     customers: list["Customer"] = Relationship(
         back_populates="plans", link_model=CustomerPlan
     )

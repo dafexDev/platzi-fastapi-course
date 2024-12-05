@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from sqlmodel import select
 
-from models import Customer, CustomerCreate, CustomerUpdate
+from models import Customer, CustomerCreate, CustomerUpdate, Plan, CustomerPlan
 from db import SessionDep
 
 
@@ -63,3 +63,30 @@ async def delete_customer(customer_id: int, session: SessionDep):
     session.delete(customer)
     session.commit()
     return {"detail": "ok"}
+
+
+@router.get("/customers/{customer_id}/plans")
+async def list_customer_plans(customer_id: int, session: SessionDep):
+    customer = session.get(Customer, customer_id)
+    if customer is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found"
+        )
+    return customer.plans
+
+
+@router.post("/customers/{customer_id}/plans/{plan_id}", response_model=CustomerPlan)
+async def subscribe_customer_to_plan(
+    customer_id: int, plan_id: int, session: SessionDep
+):
+    customer = session.get(Customer, customer_id)
+    plan = session.get(Plan, plan_id)
+    if customer is None or plan is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Customer or plan not found"
+        )
+    customer_plan = CustomerPlan(plan_id=plan.id, customer_id=customer.id)
+    session.add(customer_plan)
+    session.commit()
+    session.refresh(customer_plan)
+    return customer_plan
