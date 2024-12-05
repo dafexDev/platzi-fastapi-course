@@ -1,7 +1,14 @@
-from fastapi import APIRouter, HTTPException, status
-from sqlmodel import select
+from fastapi import APIRouter, HTTPException, status, Query
 
-from models import Customer, CustomerCreate, CustomerUpdate, Plan, CustomerPlan
+from sqlmodel import select
+from models import (
+    Customer,
+    CustomerCreate,
+    CustomerUpdate,
+    Plan,
+    CustomerPlan,
+    StatusEnum,
+)
 from db import SessionDep
 
 
@@ -66,18 +73,29 @@ async def delete_customer(customer_id: int, session: SessionDep):
 
 
 @router.get("/customers/{customer_id}/plans")
-async def list_customer_plans(customer_id: int, session: SessionDep):
+async def list_customer_plans(
+    customer_id: int, session: SessionDep, plan_status: StatusEnum = Query()
+):
     customer = session.get(Customer, customer_id)
     if customer is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found"
         )
-    return customer.plans
+    query = (
+        select(CustomerPlan)
+        .where(CustomerPlan.customer_id == customer.id)
+        .where(CustomerPlan.status == plan_status)
+    )
+    plans = session.exec(query).all()
+    return plans
 
 
 @router.post("/customers/{customer_id}/plans/{plan_id}", response_model=CustomerPlan)
 async def subscribe_customer_to_plan(
-    customer_id: int, plan_id: int, session: SessionDep
+    customer_id: int,
+    plan_id: int,
+    session: SessionDep,
+    plan_status: StatusEnum = Query(),
 ):
     customer = session.get(Customer, customer_id)
     plan = session.get(Plan, plan_id)
@@ -85,7 +103,9 @@ async def subscribe_customer_to_plan(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Customer or plan not found"
         )
-    customer_plan = CustomerPlan(plan_id=plan.id, customer_id=customer.id)
+    customer_plan = CustomerPlan(
+        plan_id=plan.id, customer_id=customer.id, status=plan_status
+    )
     session.add(customer_plan)
     session.commit()
     session.refresh(customer_plan)
