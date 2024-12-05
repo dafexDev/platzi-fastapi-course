@@ -7,7 +7,7 @@ from sqlmodel import SQLModel, Field, Relationship
 class CustomerPlan(SQLModel, table=True):
     id: int = Field(primary_key=True)
     plan_id: int = Field(foreign_key="plan.id")
-    customer: int = Field(foreign_key="customer.id")
+    customer_id: int = Field(foreign_key="customer.id")
 
 
 class Plan(SQLModel, table=True):
