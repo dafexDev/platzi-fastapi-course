@@ -37,7 +37,7 @@ class Plan(PlanBase, table=True):
 class CustomerBase(SQLModel):
     name: str = Field(default=None)
     description: Optional[str] = Field(default=None)
-    email: EmailStr = Field(default=None)
+    email: EmailStr = Field(default=None, unique=True)
     age: int = Field(default=None)
 
 

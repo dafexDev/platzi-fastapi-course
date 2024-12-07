@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Query
 
 from sqlmodel import select
+from sqlalchemy.exc import IntegrityError
 from models import (
     Customer,
     CustomerCreate,
@@ -23,10 +24,17 @@ async def list_customers(session: SessionDep):
 @router.post("/customers", response_model=Customer, status_code=status.HTTP_201_CREATED)
 async def create_customer(customer_data: CustomerCreate, session: SessionDep):
     customer = Customer.model_validate(customer_data.model_dump())
-    session.add(customer)
-    session.commit()
-    session.refresh(customer)
-    return customer
+    try:
+        session.add(customer)
+        session.commit()
+        session.refresh(customer)
+        return customer
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="A customer with this email already exists",
+        )
 
 
 @router.get("/customers/{customer_id}", response_model=Customer)
