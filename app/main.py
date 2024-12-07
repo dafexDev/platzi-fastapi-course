@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException, Request, status
-from typing import Literal, Optional
+from fastapi import FastAPI, HTTPException, Request, status, Depends
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from typing import Annotated, Literal, Optional
 from datetime import datetime
 import pytz
 import time
@@ -33,9 +34,16 @@ async def print_request_headers(request: Request, call_next):
     return await call_next(request)
 
 
+security = HTTPBasic()
+
+
 @app.get("/")
-async def root():
-    return {"message": "Hello, World!"}
+async def root(credentials: Annotated[HTTPBasicCredentials, Depends(security)]):
+    print(credentials)
+    if credentials.username == "dafex" and credentials.password == "password":
+        return {"message": "Hello, World!"}
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
 
 country_timezones = {
